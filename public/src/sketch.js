@@ -66,7 +66,8 @@ function setup() {
   document.querySelector('#update-nickname').addEventListener('click', () => { //按下按钮后连接到server
     start = true;
     //socket = io.connect('http://localhost:3000'); 
-    socket = io.connect('https://multiplayer-handsfree-flappy-b.herokuapp.com/');
+    //socket = io.connect('https://multiplayer-handsfree-flappy-b.herokuapp.com/');
+    socket = io.connect('https://webcam-food-rain.herokuapp.com/');
     //username = $("#nickname-input").attr("value");
     username = document.querySelector('#nickname-input').value;
     console.log('username: ',username);
