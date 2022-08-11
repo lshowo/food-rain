@@ -84,13 +84,10 @@ function setup() {
   faceapi = ml5.faceApi(video, faceOptions, faceReady); //调用api
 
   //新建一个socket连接到server
-  //socket = io.connect('http://localhost:3000'); 
-  //socket = io.connect('https://multiplayer-handsfree-flappy-b.herokuapp.com/');
-  //isClicked = 0 //开始标志位
   document.querySelector('#update-nickname').addEventListener('click', () => { //按下按钮后连接到server
     start = true;
-    socket = io.connect('http://localhost:3000'); 
-    //socket = io.connect('https://webcam-food-rain.herokuapp.com/');
+    //socket = io.connect('http://localhost:3000'); 
+    socket = io.connect('https://webcam-food-rain.herokuapp.com/');
     //username = $("#nickname-input").attr("value");
     username = document.querySelector('#nickname-input').value;
     console.log('username: ',username);
