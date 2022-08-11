@@ -80,7 +80,7 @@ class Snowflake {
     translate(this.pos.x + this.xOff, this.pos.y);
     rotate(this.angle);
     imageMode(CENTER);
-    image(this.img, 0, 0, this.r, this.r);
+    image(this.img, 0, 0, this.r*2, this.r*2); //实际图片
     pop();
   }
 

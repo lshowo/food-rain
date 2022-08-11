@@ -49,9 +49,6 @@ io.sockets.on('connection',
 );
 
 function displayScore(){
-    //shuju.sort(this.compare("sum"));
-    //scores.sort(this.compare('score'));
-    //arr.sort(sortBy('number',false));
     scores.sort(sortBy('score',false));
     io.sockets.emit('displayScore', scores);
 }
