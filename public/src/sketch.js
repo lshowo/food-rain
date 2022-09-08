@@ -1,6 +1,3 @@
-// Snowfall
-// idea: https://youtu.be/cl-mHFCGzYk
-
 //let snow = []; //存放调整好大小的食物
 let snow1 = [];  //存放水果
 let snow2 = []; //存放垃圾食品
@@ -92,7 +89,6 @@ function setup() {
     username = document.querySelector('#nickname-input').value;
     console.log('username: ',username);
   })
-
 }
 
 
@@ -258,6 +254,7 @@ function sortLeaderboard(scores){
   //scoreLabel.innerHTML = "Score: " + myScore;
   let listItems = "";
   scores.forEach((bird) => {
+    console.log('11111111');
     if(bird.username != ''){
       listItems +=
       "<li class='score-item'><span class='name'>" +
