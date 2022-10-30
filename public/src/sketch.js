@@ -81,8 +81,8 @@ function setup() {
   //新建一个socket连接到server
   document.querySelector('#update-nickname').addEventListener('click', () => { //按下按钮后连接到server
     start = true;
-    //socket = io.connect('http://localhost:3000'); 
-    socket = io.connect('https://webcam-food-rain.herokuapp.com/');
+    socket = io.connect('http://localhost:3000'); 
+    //socket = io.connect('https://webcam-food-rain.herokuapp.com/');
     //username = $("#nickname-input").attr("value");
     username = document.querySelector('#nickname-input').value;
     $nickname.style.display = 'none';
@@ -156,6 +156,7 @@ function draw() {
         }
         if(hintEnd != null && hintStart != null && (hintEnd - hintStart < 3)){
           //console.log(hintEnd, hintStart, hintEnd - hintStart);
+          strokeWeight(4);
           hintPos._y -= 1.3;
           if(plus){
             text("🤩 |+", hintPos._x, hintPos._y);
@@ -231,9 +232,9 @@ function drawPart(feature, closed) {
     const y = feature[i]._y;
     //这里*2是为了让嘴巴更明显
     vertex(x, y);
-    // stroke(161, 95, 251);
-    // strokeWeight(8);
-    // point(x, y);
+    stroke(161, 95, 251);
+    strokeWeight(9);
+    //point(x, y);
   }
   if (closed === true) {
     endShape(CLOSE);
@@ -320,7 +321,6 @@ function sortLeaderboard(scores){
   //scoreLabel.innerHTML = "Score: " + myScore;
   let listItems = "";
   scores.forEach((bird) => {
-    //console.log('11111111');
     if(bird.username != ''){
       listItems +=
       "<li class='score-item'><span class='name'>" +

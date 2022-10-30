@@ -18,7 +18,6 @@ app.use(cors());
 app.use(express.static('./public'));
 
 var io = require('socket.io')(server); //创建服务器io对象
-
 var scores = []; //对象数组 存放client的id与对应成绩
 
 //接收数据（收到client的连接）
@@ -32,10 +31,6 @@ io.sockets.on('connection',
 
         socket.on('updateScore', function (score, username) {
             console.log('🌟', score, 'a new score received from: ', socket.id);
-            // var obj = socket;
-            // objIndex = scores.findIndex((obj => obj.id == socket.id));
-            // console.log('🔍', objIndex, scores[objIndex]);
-            // scores[objIndex].score = score;
             for (var i in scores){
                 if(scores[i].id == socket.id){
                     scores[i].username = username;
