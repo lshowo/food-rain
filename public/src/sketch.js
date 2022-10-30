@@ -158,10 +158,8 @@ function draw() {
           //console.log(hintEnd, hintStart, hintEnd - hintStart);
           hintPos._y -= 1.3;
           if(plus){
-            //text("+1 🤩", hintPos._x, hintPos._y);
             text("🤩 |+", hintPos._x, hintPos._y);
           }else{
-            //text("-1 😫", hintPos._x, hintPos._y);
             text("😫 |-", hintPos._x, hintPos._y);
           }
           hintEnd = second();
