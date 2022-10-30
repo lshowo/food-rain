@@ -24,13 +24,17 @@ const faceOptions = {
 
 let username;
 let start = false;
+let $scoreLabel1 = document.querySelector('#score-label1');  //score1标签对应我的总分
+let $nickname = document.querySelector('.nickname');  //nickname是按钮和输入框部分
+let $myscore = document.querySelector('.my-score');  
+let $instruction = document.querySelector('.instruction'); 
 
 function preload() { //加载食物图片
-  //spritesheet = loadImage('../assets/Ghostpixxells_pixelfood.png');
   Slicedfruits = loadImage('../assets/Slicedfruits.png');
   Junkfoods = loadImage('../assets/Cakes.png');
-  //song = loadSound('2019-01-02_-_8_Bit_Menu_-_David_Renda_-_FesliyanStudios.com.mp3')
-  //song = new Audio('2019-01-02_-_8_Bit_Menu_-_David_Renda_-_FesliyanStudios.com.mp3');
+  dingding = loadSound('../assets/dingding.mp3');
+  dudu = loadSound('../assets/dudu.mp3');
+  console.log(dingding, dudu);
 }
 
 var socket; //创建一个 socket 对象
@@ -45,9 +49,7 @@ function setup() {
       image(img, x, y);  //取(x, y)处的图片
       textures1.push(img); //放在textures里
     }
-    console.log(textures1);
   }
-
   //裁剪垃圾食品素材
   for (let x = 0; x < Junkfoods.width; x += 32) { //创建食物
     for (let y = 0; y < Junkfoods.height; y += 32) {
@@ -55,9 +57,7 @@ function setup() {
       image(img, x, y);  //取(x, y)处的图片
       textures2.push(img); //放在textures里
     }
-    console.log(textures2);
   }
-  
   //生成掉落的水果放到snow1数组
   for (let i = 0; i < 5; i++) { //生成10个水果
     let x = random(width);
@@ -65,7 +65,6 @@ function setup() {
     let design1 = random(textures1);
     snow1.push(new Snowflake(x, y, design1));  //最终生成的图片放入snow里
   }
-
   //生成掉落的垃圾食品放入snow2
   for (let i = 0; i < 5; i++) { //生成10个水果
     let x = random(width);
@@ -73,7 +72,6 @@ function setup() {
     let design2 = random(textures2);
     snow2.push(new Snowflake(x, y, design2));  //最终生成的图片放入snow里
   }
-
   //准备camera
   video = createCapture(VIDEO);
   video.size(windowHeight*1.78, windowHeight);
@@ -83,30 +81,42 @@ function setup() {
   //新建一个socket连接到server
   document.querySelector('#update-nickname').addEventListener('click', () => { //按下按钮后连接到server
     start = true;
-    //socket = io.connect('http://localhost:3000'); 
-    socket = io.connect('https://webcam-food-rain.herokuapp.com/');
+    socket = io.connect('http://localhost:3000'); 
+    //socket = io.connect('https://webcam-food-rain.herokuapp.com/');
     //username = $("#nickname-input").attr("value");
     username = document.querySelector('#nickname-input').value;
-    console.log('username: ',username);
+    $nickname.style.display = 'none';
+    $instruction.style.display = 'none';
+    $myscore.style.display = 'inline';
+    $scoreLabel1.innerHTML = username + ':' + '<span id="score1">0</span>';
+    console.log('username: ', username);
   })
 }
 
 
 let mouthPos;
+let hintLeft;
+let hintRight;
+let hintLeftStart = null;
+let hintRightStart = null;
+let hintStart = null;
+let hintEnd = null;
+let hintPos;
+let plus;
+
 function draw() {
-  background(0, 255, 0);
-  //draw the video
   translate(video.width, 0); //flip the video
   scale(-1, 1);
+  background(0, 255, 0);
   image(video, 0, 0, width, width * video.height / video.width);
-  // Just look at the first face and draw all the points
-  if (detections) {
+  textSize(100);
+  if (detections){
     if (detections.length > 0) {
-      // drawBox(detections);
+      // mouthPos: detections[i].parts.mouth;
       mouthPos = drawLandmarks(detections);
+      //console.log(mouthPos);
     }
   }
-
   if(start){
     zOff += 0.1;
     for (let i = 0; i < snow1.length; i += 1){
@@ -118,21 +128,52 @@ function draw() {
       let xOff2 = flake2.pos.x / width;
       let yOff2 = flake2.pos.y / height;
       //增加柏林噪声：https://p5js.org/zh-Hans/reference/#/p5/noise
-      let wAngle1 = noise(xOff1, yOff1, zOff) * TWO_PI; //////
+      let wAngle1 = noise(xOff1, yOff1, zOff) * TWO_PI; 
       let wAngle2 = noise(xOff2, yOff2, zOff) * TWO_PI;
       let wind1 = p5.Vector.fromAngle(wAngle1);
       let wind2 = p5.Vector.fromAngle(wAngle2);
-      if(mouthPos){
-        eat(mouthPos, flake1, i, true);
+  
+      //处理吃东西
+      if(mouthPos){ //检测到嘴巴
+        eat(mouthPos, flake1, i, true); //处理嘴巴是否吃到食物
         eat(mouthPos, flake2, i, false);
+        //处理弹出得分提示
+        //左侧or右侧 得分or减分
+        if((hintLeftStart == null && hintRightStart != null)||
+        (hintRightStart>hintLeftStart)){
+            hintStart = hintRightStart;
+            hintPos = hintRight;
+            plus = true;
+        }else if((hintRightStart == null && hintLeftStart != null)||
+        (hintLeftStart > hintRightStart)){
+            hintStart = hintLeftStart;
+            hintPos = hintLeft;
+            plus = false;
+        }
+        //text写出提示 显示3s
+        if(hintEnd == null){
+          hintEnd = second();
+        }
+        if(hintEnd != null && hintStart != null && (hintEnd - hintStart < 3)){
+          //console.log(hintEnd, hintStart, hintEnd - hintStart);
+          hintPos._y -= 1.3;
+          if(plus){
+            //text("+1 🤩", hintPos._x, hintPos._y);
+            text("🤩 |+", hintPos._x, hintPos._y);
+          }else{
+            //text("-1 😫", hintPos._x, hintPos._y);
+            text("😫 |-", hintPos._x, hintPos._y);
+          }
+          hintEnd = second();
+        }
       }
+      
       //飘～～～～～～～～～～～～～～～～～～
       wind1.mult(0.01);
       flake1.applyForce(gravity);
       flake1.applyForce(wind1);
       flake1.update();
       flake1.render(); 
-
       wind2.mult(0.01);
       flake2.applyForce(gravity);
       flake2.applyForce(wind2);
@@ -141,6 +182,7 @@ function draw() {
     }
   }
 }
+
 
 
 function faceReady() {
@@ -166,6 +208,7 @@ function drawLandmarks(detections) {
   strokeWeight(2);
   for (let i = 0; i < detections.length; i += 1) {
     const mouth = detections[i].parts.mouth;
+    //console.log(mouth);//mouth中是20个点的x,y值
     //const nose = detections[i].parts.nose;
     // const leftEye = detections[i].parts.leftEye;
     // const rightEye = detections[i].parts.rightEye;
@@ -188,6 +231,7 @@ function drawPart(feature, closed) {
   for (let i = 0; i < feature.length; i += 1) {
     const x = feature[i]._x;
     const y = feature[i]._y;
+    //这里*2是为了让嘴巴更明显
     vertex(x, y);
     // stroke(161, 95, 251);
     // strokeWeight(8);
@@ -202,7 +246,11 @@ function drawPart(feature, closed) {
 
 
 let score = 0;
-let $score = document.querySelector('#score');
+let fruit = 0;
+let dessert = 0;
+let $score1 = document.querySelector('#score1');  //score1标签对应我的总分
+let $score2 = document.querySelector('#score2');  //score1标签对应水果得分
+let $score3 = document.querySelector('#score3');  //score1标签对应甜品得分
 function eat(mouth, flake, i, plus){
   //print(mouth)
   let top = 999999;
@@ -224,15 +272,33 @@ function eat(mouth, flake, i, plus){
     if (flake.pos.y > top & flake.pos.y < bottom) {
       if (flake.pos.x > left & flake.pos.x < right) {
         if(plus && i > -1){
+          //更新加分
           score += 1;
+          fruit += 1;
+          $score2.innerHTML = fruit;
+          //处理得分提示
+          hintRight = mouth[6]; 
+          hintRightStart = second(); 
+          //提示音
+          dingding.play();
           snow1.splice(i, 1);  //这个img消失
           snow1.push(new Snowflake(random(width), random(height), random(textures1))); //再生成一个新的加入  
         }else if(!plus && i > -1){
+          //更新减分
           score -= 1;
+          dessert += 1;
+          $score3.innerHTML = dessert;
+          //处理得分提示
+          hintLeft = mouth[12]; 
+          hintLeftStart = second();
+          //提示音
+          dudu.play();
           snow2.splice(i, 1);  //这个img消失
           snow2.push(new Snowflake(random(width), random(height), random(textures2))); //再生成一个新的加入  
         }
-        $score.innerHTML = score;
+        //更新myscore部分的信息
+        $score1 = document.querySelector('#score1'); 
+        $score1.innerHTML = score;
         //发送分数给server
         socket.emit('updateScore', score, username); 
       }
@@ -240,12 +306,14 @@ function eat(mouth, flake, i, plus){
   }
 }
 
+
 // let scoreList = 0;
 // let $scoreList = document.querySelector('#score-list');
 socket.on('displayScore', function (scores) {
-  console.log('receive scores: ', scores);
+  //console.log('receive scores: ', scores);
   sortLeaderboard(scores);
 })
+
 
 //let scoreLabel = document.getElementById("score-label");
 let topScoreLabel = document.getElementById("top-label");
@@ -254,7 +322,7 @@ function sortLeaderboard(scores){
   //scoreLabel.innerHTML = "Score: " + myScore;
   let listItems = "";
   scores.forEach((bird) => {
-    console.log('11111111');
+    //console.log('11111111');
     if(bird.username != ''){
       listItems +=
       "<li class='score-item'><span class='name'>" +
