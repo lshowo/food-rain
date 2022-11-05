@@ -6,16 +6,6 @@ function getRandomSize() {
   //let r = pow(random(0, 1), 1);
   let r = pow(random(3, 6), 10); 
   return constrain(r * 32, 2, 32);
-
-  // let r = randomGaussian() * 2.5;
-  // return constrain(abs(r * r), 2, 36);
-  // while (true) {
-  //   let r1 = random(1);
-  //   let r2 = random(1);
-  //   if (r2 > r1) {
-  //     return r1 * 36;
-  //   }
-  // }
 }
 
 class Snowflake {
@@ -36,8 +26,6 @@ class Snowflake {
     // Parallax Effect hack
     let f = force.copy();
     f.mult(this.r);
-    // let f = force.copy();
-    // f.div(this.mass);
     this.acc.add(f);
   }
 
@@ -73,14 +61,11 @@ class Snowflake {
   }
 
   render() {
-    // stroke(255);
-    // strokeWeight(this.r);
-    // point(this.pos.x, this.pos.y);
     push();
     translate(this.pos.x + this.xOff, this.pos.y);
     rotate(this.angle);
     imageMode(CENTER);
-    image(this.img, 0, 0, this.r*2, this.r*2); //实际图片
+    image(this.img, 0, 0, this.r*3, this.r*3); //画出单个图像，这里调整大小！！
     pop();
   }
 

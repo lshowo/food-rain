@@ -1,4 +1,3 @@
-//let snow = []; //存放调整好大小的食物
 let snow1 = [];  //存放水果
 let snow2 = []; //存放垃圾食品
 let gravity;
@@ -6,9 +5,11 @@ let gravity;
 let zOff = 0;
 
 let Slicedfruits;
-let textures1 = []; //放裁剪好的水果素材
 let Junkfoods;
+let textures1 = []; //放裁剪好的水果素材
 let textures2 = []; //放裁剪好的垃圾食品素材
+let mouth1;
+let mouth2;
 
 // ml5 Face Detection Model
 let faceapi;
@@ -32,6 +33,8 @@ let $instruction = document.querySelector('.instruction');
 function preload() { //加载食物图片
   Slicedfruits = loadImage('../assets/Slicedfruits.png');
   Junkfoods = loadImage('../assets/Cakes.png');
+  mouth1 = loadImage('../assets/mouthClose.png');
+  mouth2 = loadImage('../assets/mouthOpen.png');
   dingding = loadSound('../assets/dingding.mp3');
   dudu = loadSound('../assets/dudu.mp3');
   console.log(dingding, dudu);
@@ -46,8 +49,12 @@ function setup() {
   for (let x = 0; x < Slicedfruits.width; x += 32) { //创建食物
     for (let y = 0; y < Slicedfruits.height; y += 32) {
       let img = Slicedfruits.get(x, y, 32, 32); //获取食物图片
-      image(img, x, y);  //取(x, y)处的图片
+      //image(img, x, y);  //取(x, y)处的图片
+      //img.width = 150;
+      //img.height = 150;
+      //console.log(img);
       textures1.push(img); //放在textures里
+      console.log(textures1);
     }
   }
   //裁剪垃圾食品素材
@@ -72,6 +79,7 @@ function setup() {
     let design2 = random(textures2);
     snow2.push(new Snowflake(x, y, design2));  //最终生成的图片放入snow里
   }
+
   //准备camera
   video = createCapture(VIDEO);
   video.size(windowHeight*1.78, windowHeight);
@@ -103,7 +111,6 @@ let hintStart = null;
 let hintEnd = null;
 let hintPos;
 let plus;
-
 function draw() {
   translate(video.width, 0); //flip the video
   scale(-1, 1);
@@ -166,7 +173,6 @@ function draw() {
           hintEnd = second();
         }
       }
-      
       //飘～～～～～～～～～～～～～～～～～～
       wind1.mult(0.01);
       flake1.applyForce(gravity);
@@ -181,8 +187,6 @@ function draw() {
     }
   }
 }
-
-
 
 function faceReady() {
   faceapi.detect(gotFaces);
@@ -199,7 +203,7 @@ function gotFaces(error, result) {
   faceapi.detect(gotFaces);
 }
 
-
+//处理检测到的面部关键点
 function drawLandmarks(detections) {
   //console.log(detections);
   noFill();
@@ -213,7 +217,10 @@ function drawLandmarks(detections) {
     // const rightEye = detections[i].parts.rightEye;
     // const rightEyeBrow = detections[i].parts.rightEyeBrow;
     // const leftEyeBrow = detections[i].parts.leftEyeBrow;
-    drawPart(mouth, true);
+    //游戏开始前显示嘴唇轮廓
+    if (!start){ 
+      drawPart(mouth, true);
+    }
     //drawPart(nose, false);
     // drawPart(leftEye, true);
     // drawPart(leftEyeBrow, false);
@@ -223,14 +230,12 @@ function drawLandmarks(detections) {
   }
 }
 
-
+//画出具体的五官
 function drawPart(feature, closed) {
-  //console.log(feature);
   beginShape();
   for (let i = 0; i < feature.length; i += 1) {
     const x = feature[i]._x;
     const y = feature[i]._y;
-    //这里*2是为了让嘴巴更明显
     vertex(x, y);
     stroke(161, 95, 251);
     strokeWeight(9);
@@ -256,18 +261,28 @@ function eat(mouth, flake, i, plus){
   let bottom = -1;
   let left = 999999;
   let right = -1;
-  for (point of mouth){
+
+  for (point of mouth){ //找到嘴巴四个方向最大值
     top = min(top, point._y);
     bottom = max(bottom, point._y);
     left = min(left, point._x);
     right = max(right, point._x);
   }
+
   let mouthOpen = false;
-  //嘴唇内侧上下两点相减判断是否张开
-  if (mouth[18]._y - mouth[15]._y >= 6){
+  //判断嘴巴张开还是闭合
+  if(bottom-top > 0.53*(right-left)){
     mouthOpen = true;
   }
-  if (mouthOpen){ //如果嘴巴张开 判断食物是否在嘴巴范围内
+
+  //嘴巴闭合
+  if(!mouthOpen){ 
+    //image(img, x, y, [width], [height])
+    image(mouth1, left, top, 1.3*(right-left), 1.3*(bottom-top));
+  }
+  else{ 
+    image(mouth2, left, top, 1.3*(right-left), 1.3*(bottom-top));
+    //如果嘴巴张开 判断食物是否在嘴巴范围内
     if (flake.pos.y > top & flake.pos.y < bottom) {
       if (flake.pos.x > left & flake.pos.x < right) {
         if(plus && i > -1){
